@@ -84,3 +84,14 @@ int access_ok(int type, const void * addr, unsigned long size)
   }
   return 0;
 }
+
+void hex_to_str(unsigned int val, char *buf)
+{
+  const char digits[] = "0123456789ABCDEF";
+  int i;
+  for (i = 7; i >= 0; i--) {
+    buf[i] = digits[val & 0xF];
+    val >>= 4;
+  }
+  buf[8] = '\0';
+}

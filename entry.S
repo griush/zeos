@@ -70,6 +70,12 @@
 
 ENTRY(page_fault_handler) 
       SAVE_ALL
+      movl 0x2C(%esp), %eax     /* error code */
+      movl 0x30(%esp), %edx     /* faulting EIP */
+      movl %cr2, %ecx           /* faulting address */
+      pushl %eax                /* arg 3: error */
+      pushl %ecx                /* arg 2: cr2 */
+      pushl %edx                /* arg 1: eip */
       call page_fault_routine
       RESTORE_ALL
       addl $4, %esp /* Limpia el error code de 4 bytes si llegara a retornar */

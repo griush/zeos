@@ -6,6 +6,7 @@
 #include <segment.h>
 #include <hardware.h>
 #include <io.h>
+#include <utils.h> /* for hex_to_str */
 
 #include <zeos_interrupt.h>
 
@@ -28,6 +29,8 @@ char char_map[] =
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
 };
+
+extern void page_fault_handler(void);
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -88,15 +91,16 @@ void setIdt()
   set_idt_reg(&idtR);
 }
 
-void page_fault_routine(struct page_fault_registers regs) {
-  unsigned long fault_address = get_cr2();
-  printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
-  print_hex(regs.eip); // o printk formateado según las utilidades disponibles
-  printk("\nOffending address (CR2): 0x");
-  print_hex(fault_address);
-  printk("\nError Code: 0x");
-  print_hex(regs.error_code); 
-  // Bucle infinito para detener el sistema
+void page_fault_routine(unsigned int eip, unsigned int cr2, unsigned int error) {
+  char buf[9];
+  printk("\nprocess generated a PAGE FAULT exception at EIP: 0x");
+  hex_to_str(eip, buf);
+  printk(buf);
+  printk("\noffending address (CR2): 0x");
+  hex_to_str(cr2, buf);
+  printk(buf);
+  printk("\nerror code: 0x");
+  hex_to_str(error, buf);
+  printk(buf);
   while(1);
-
 }

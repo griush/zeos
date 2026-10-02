@@ -9,4 +9,6 @@ int copy_to_user(void *start, void *dest, int size);
 #define VERIFY_WRITE	1
 int access_ok(int type, const void *addr, unsigned long size);
 
+void hex_to_str(unsigned int val, char *buf);
+
 #endif
