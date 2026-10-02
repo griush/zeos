@@ -30,7 +30,12 @@ char char_map[] =
   '\0','\0'
 };
 
-extern void page_fault_handler(void);
+/* exceptions */
+extern void pagefault_handler(void);
+
+/* interrupts */
+extern void timer_handler(void);
+extern void keyboard_handler(void);
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -83,15 +88,18 @@ void setIdt()
   idtR.base  = (DWord)idt;
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   
-  //set_handlers();
-  setInterruptHandler(14, page_fault_handler, 0);
+  set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+  setInterruptHandler(14, pagefault_handler, 0);
+
+  setInterruptHandler(32, timer_handler, 0);
+  setInterruptHandler(33, keyboard_handler, 0);
 
   set_idt_reg(&idtR);
 }
 
-void page_fault_routine(unsigned int eip, unsigned int cr2, unsigned int error) {
+void pagefault_routine(unsigned int eip, unsigned int cr2, unsigned int error) {
   char buf[9];
   printk("\nprocess generated a PAGE FAULT exception at EIP: 0x");
   hex_to_str(eip, buf);
@@ -103,4 +111,16 @@ void page_fault_routine(unsigned int eip, unsigned int cr2, unsigned int error) 
   hex_to_str(error, buf);
   printk(buf);
   while(1);
+}
+
+void timer_routine(void) {
+  zeos_show_clock();
+}
+
+void keyboard_routine(void) {
+  unsigned char ch = inb(0x60);
+
+  if (!(ch & 0x80)) {
+    printc_xy(75, 5, char_map[ch & 0x7f]);
+  }
 }

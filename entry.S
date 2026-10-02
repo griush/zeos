@@ -68,7 +68,7 @@
       movb $0x20, %al; \
       outb %al, $0x20;
 
-ENTRY(page_fault_handler) 
+ENTRY(pagefault_handler) 
       SAVE_ALL
       movl 0x2C(%esp), %eax     /* error code */
       movl 0x30(%esp), %edx     /* faulting EIP */
@@ -76,7 +76,21 @@ ENTRY(page_fault_handler)
       pushl %eax                /* arg 3: error */
       pushl %ecx                /* arg 2: cr2 */
       pushl %edx                /* arg 1: eip */
-      call page_fault_routine
+      call pagefault_routine
       RESTORE_ALL
       addl $4, %esp /* Limpia el error code de 4 bytes si llegara a retornar */
+      iret
+
+ENTRY(timer_handler)
+      SAVE_ALL
+      EOI
+      call timer_routine
+      RESTORE_ALL
+      iret
+
+ENTRY(keyboard_handler)
+      SAVE_ALL
+      EOI
+      call keyboard_routine
+      RESTORE_ALL
       iret
