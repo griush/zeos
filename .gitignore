@@ -4,6 +4,8 @@
 
 build
 
+*.out
+
 bootsect
 system
 user
