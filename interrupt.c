@@ -15,11 +15,11 @@ Register    idtR;
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
-  '7','8','9','0','\'','¡','\0','\0',
+  '7','8','9','0','\'','ï¿½','\0','\0',
   'q','w','e','r','t','y','u','i',
   'o','p','`','+','\0','\0','a','s',
-  'd','f','g','h','j','k','l','ñ',
-  '\0','º','\0','ç','z','x','c','v',
+  'd','f','g','h','j','k','l','ï¿½',
+  '\0','ï¿½','\0','ï¿½','z','x','c','v',
   'b','n','m',',','.','-','\0','*',
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0','\0','\0','\0','\0','\0','7',
@@ -80,10 +80,23 @@ void setIdt()
   idtR.base  = (DWord)idt;
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   
-  set_handlers();
+  //set_handlers();
+  setInterruptHandler(14, page_fault_handler, 0);
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 
   set_idt_reg(&idtR);
 }
 
+void page_fault_routine(struct page_fault_registers regs) {
+  unsigned long fault_address = get_cr2();
+  printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
+  print_hex(regs.eip); // o printk formateado segÃºn las utilidades disponibles
+  printk("\nOffending address (CR2): 0x");
+  print_hex(fault_address);
+  printk("\nError Code: 0x");
+  print_hex(regs.error_code); 
+  // Bucle infinito para detener el sistema
+  while(1);
+
+}

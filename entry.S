@@ -49,5 +49,28 @@
       pushl %edx; \
       movl $__KERNEL_DS, %edx;    \
       movl %edx, %ds;           \
-      movl %edx, %es
+      movl %edx, %es;
 
+#define RESTORE_ALL \
+      popl %edx; \
+      popl %ecx; \
+      popl %ebx; \
+      popl %esi; \
+      popl %edi; \
+      popl %ebp; \
+      popl %eax; \
+      popl %ds; \
+      popl %es; \
+      popl %fs; \
+      popl %gs;
+
+#define EOI \
+      movb $0x20, %al; \
+      outb %al, $0x20;
+
+ENTRY(page_fault_handler) 
+      SAVE_ALL
+      call page_fault_routine
+      RESTORE_ALL
+      addl $4, %esp /* Limpia el error code de 4 bytes si llegara a retornar */
+      iret
