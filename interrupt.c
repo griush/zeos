@@ -30,12 +30,20 @@ char char_map[] =
   '\0','\0'
 };
 
+/*
+ * handlers below defined in entry.S
+ */
+
 /* exceptions */
 extern void pagefault_handler(void);
 
 /* interrupts */
 extern void timer_handler(void);
 extern void keyboard_handler(void);
+
+/* syscalls */
+void syscall_handler_sysenter(void);
+void writeMSR(unsigned long num, unsigned long value);
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -96,6 +104,11 @@ void setIdt()
   setInterruptHandler(32, timer_handler, 0);
   setInterruptHandler(33, keyboard_handler, 0);
 
+  /* syscalls */
+  writeMSR(0x174, __KERNEL_CS);
+  writeMSR(0x175, INITIAL_ESP);
+  writeMSR(0x176, (unsigned long)syscall_handler_sysenter);
+
   set_idt_reg(&idtR);
 }
 
@@ -115,6 +128,7 @@ void pagefault_routine(unsigned int eip, unsigned int cr2, unsigned int error) {
 
 void timer_routine(void) {
   zeos_show_clock();
+  zeos_ticks++;
 }
 
 void keyboard_routine(void) {

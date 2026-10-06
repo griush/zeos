@@ -8,6 +8,14 @@
 
 void itoa(int a, char *b);
 
-int strlen(char *a);
+int strlen(const char *a);
+
+void perror(void);
+
+/* syscalls
+ * defined in syscalls.S
+ */
+int write (int fd, const char *buffer, int size);
+int gettime(void);
 
 #endif  /* __LIBC_H__ */

@@ -6,11 +6,17 @@ int pid;
 
 int result;
 
-int addASM(int a, int b);
-
-int add(int par1, int par2) {
-  return par1 + par2;
+void hex_to_str(unsigned int val, char *buf)
+{
+  const char digits[] = "0123456789ABCDEF";
+  int i;
+  for (i = 7; i >= 0; i--) {
+    buf[i] = digits[val & 0xF];
+    val >>= 4;
+  }
+  buf[8] = '\0';
 }
+
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -18,8 +24,15 @@ int __attribute__ ((__section__(".text.main")))
     /* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-  result = add(6, 47818);
-  result = addASM(51914, 5901);
-    
-  while(1) { }
+	const char *msg = "Good morning from user code!\n";
+	write(1, msg, strlen(msg));
+
+	int ticks = gettime();
+	char buf[8];
+	hex_to_str(ticks, buf);
+	write(1, buf, strlen(buf));
+	write(1, "\n", 1);
+
+	while(1) {
+	}
 }

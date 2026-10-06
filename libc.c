@@ -32,7 +32,7 @@ void itoa(int a, char *b)
   b[i]=0;
 }
 
-int strlen(char *a)
+int strlen(const char *a)
 {
   int i;
   
@@ -41,5 +41,11 @@ int strlen(char *a)
   while (a[i]!=0) i++;
   
   return i;
+}
+
+void perror(void)
+{
+	const char *msg = "error";
+	write(1, msg, strlen(msg));
 }
 
