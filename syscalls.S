@@ -5,60 +5,37 @@
 ENTRY(write)
 	pushl %ebp
 	movl %esp, %ebp
-
-	pushl %edx
-	pushl %ecx
 	pushl %ebx
-
-	movl 8(%ebp), %edx // fd
-	movl 12(%ebp), %ecx // buffer
-	movl 16(%ebp), %ebx // size
-	
-	movl $4, %eax // 4 for sys_write
-
-	pushl $sys_write_return // save return address
-	pushl %ebp
-	movl %esp, %ebp
-	sysenter
-
-sys_write_return:
-	pop %ebp
-	addl $4, %esp
-	
+ 
+	leal 8(%ebp), %ebx
+	movl $4, %eax           /* sys_write */
+	int $0x93
+ 
 	popl %ebx
-	popl %ecx
-	popl %edx
-
 	cmpl $0, %eax
-	jge sys_write_end
+	jge write_end
 	negl %eax
 	movl %eax, errno
 	movl $-1, %eax
-sys_write_end:
+write_end:
 	popl %ebp
 	ret
-	
+ 
 ENTRY(gettime)
 	pushl %ebp
 	movl %esp, %ebp
-
-	movl $10, %eax // 4 for sys_gettime
-
-	pushl $sys_gettime_return // save return address
-	pushl %ebp
-	movl %esp, %ebp
-	sysenter
-
-sys_gettime_return:
-	pop %ebp
-	addl $4, %esp
-
+	pushl %ebx
+ 
+	leal 8(%ebp), %ebx
+	movl $10, %eax          /* sys_gettime */
+	int $0x93
+ 
+	popl %ebx
 	cmpl $0, %eax
-	jge sys_gettime_end
+	jge gettime_end
 	negl %eax
 	movl %eax, errno
 	movl $-1, %eax
-sys_gettime_end:
+gettime_end:
 	popl %ebp
 	ret
-	

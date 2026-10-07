@@ -42,8 +42,7 @@ extern void timer_handler(void);
 extern void keyboard_handler(void);
 
 /* syscalls */
-void syscall_handler_sysenter(void);
-void writeMSR(unsigned long num, unsigned long value);
+void system_call_handler(void);
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -105,9 +104,7 @@ void setIdt()
   setInterruptHandler(33, keyboard_handler, 0);
 
   /* syscalls */
-  writeMSR(0x174, __KERNEL_CS);
-  writeMSR(0x175, INITIAL_ESP);
-  writeMSR(0x176, (unsigned long)syscall_handler_sysenter);
+  setTrapHandler(0x93, system_call_handler, 3);
 
   set_idt_reg(&idtR);
 }

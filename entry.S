@@ -96,35 +96,19 @@ ENTRY(keyboard_handler)
       RESTORE_ALL
       iret
 
-ENTRY(syscall_handler_sysenter)
-	push $__USER_DS
-	push %EBP // User stack address
-	pushfl
-	push $__USER_CS
-	push 4(%EBP) // User return address
+ENTRY(system_call_handler)
 	SAVE_ALL
-	cmpl $0, %EAX
-	jl sysenter_err
-	cmpl $MAX_SYSCALL, %EAX
-	jg sysenter_err
-	call *sys_call_table(, %EAX, 0x04)
-	jmp sysenter_fin
-sysenter_err:
-	movl $-ENOSYS, %EAX
-sysenter_fin:
-	movl %EAX, 0x18(%ESP)
+	cmpl $0, %eax
+	jl sys_err
+	cmpl $MAX_SYSCALL, %eax
+	jge sys_err
+	pushl %ebx                      /* pointer to params in the stack */
+	call *sys_call_table(, %eax, 4)
+	addl $4, %esp
+	jmp sys_fin
+sys_err:
+	movl $-ENOSYS, %eax
+sys_fin:
+	movl %eax, 0x18(%esp)
 	RESTORE_ALL
-	movl (%ESP), %EDX // Return address
-	movl 12(%ESP), %ECX // User stack address
-	sti // Enable interrupts again
-	sysexit
-
-ENTRY(writeMSR)
-	push %ebp
-	movl %esp, %ebp
-	movl 8(%ebp), %ecx
-	movl $0, %edx
-	movl 12(%ebp), %eax
-	wrmsr
-	popl %ebp
-	ret
+	iret

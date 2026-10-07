@@ -26,20 +26,34 @@ int sys_ni_syscall()
 	return -ENOSYS;
 }
 
-int sys_write(int fd, char *buffer, int size)
+struct write_params {
+	int fd;
+	char *buffer;
+	int size;
+};
+
+int sys_write(void *params)
 {
-	int cfd = check_fd(fd, ESCRIPTURA);
+	struct write_params p;
+
+	if (!access_ok(VERIFY_READ, params, sizeof(p)))
+		return -EFAULT;
+	copy_from_user(params, &p, sizeof(p));
+
+	int cfd = check_fd(p.fd, ESCRIPTURA);
 	if (cfd != 0)
 		return cfd;
 
-	if (buffer == 0)
+	if (p.buffer == 0)
 		return -EFAULT; /* bad buffer */
-	if (size < 0)
+	if (p.size < 0)
 		return -EINVAL; /* bad write size */
+	if (!access_ok(VERIFY_READ, p.buffer, p.size))
+		return -EFAULT;
 
-	char s_buff[size];
-	copy_from_user(buffer, s_buff, size);
-	return sys_write_console(s_buff, size);
+	char s_buff[p.size];
+	copy_from_user(p.buffer, s_buff, p.size);
+	return sys_write_console(s_buff, p.size);
 }
 
 int sys_gettime(void)
