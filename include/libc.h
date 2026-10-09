@@ -6,6 +6,8 @@
 #ifndef __LIBC_H__
 #define __LIBC_H__
 
+#define NULL ( (void *) 0)
+
 void itoa(int a, char *b);
 
 int strlen(const char *a);
