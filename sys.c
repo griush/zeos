@@ -35,6 +35,7 @@ struct write_params {
 int sys_write(void *params)
 {
 	struct write_params p;
+	int done = 0;
 
 	if (!access_ok(VERIFY_READ, params, sizeof(p)))
 		return -EFAULT;
@@ -51,9 +52,15 @@ int sys_write(void *params)
 	if (!access_ok(VERIFY_READ, p.buffer, p.size))
 		return -EFAULT;
 
-	char s_buff[p.size];
-	copy_from_user(p.buffer, s_buff, p.size);
-	return sys_write_console(s_buff, p.size);
+	char s_buff[256];
+	while (done < p.size) {
+		int n = p.size - done;
+		if (n > 256) n = 256;
+		copy_from_user(p.buffer + done, s_buff, n);
+		sys_write_console(s_buff, n);
+		done += n;
+	}
+	return done;
 }
 
 int sys_gettime(void)

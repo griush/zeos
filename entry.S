@@ -69,17 +69,15 @@
       movb $0x20, %al; \
       outb %al, $0x20;
 
-ENTRY(pagefault_handler) 
+ENTRY(pagefault_handler)
       SAVE_ALL
-      movl 0x2C(%esp), %eax     /* error code */
-      movl 0x30(%esp), %edx     /* faulting EIP */
       movl %cr2, %ecx           /* faulting address */
-      pushl %eax                /* arg 3: error */
       pushl %ecx                /* arg 2: cr2 */
-      pushl %edx                /* arg 1: eip */
+      pushl %esp                /* arg 1: pointer to struct sys_stack */
       call pagefault_routine
+      addl $8, %esp             /* clean args */
       RESTORE_ALL
-      addl $4, %esp /* Limpia el error code de 4 bytes si llegara a retornar */
+      addl $4, %esp             /* discard CPU-pushed error code */
       iret
 
 ENTRY(timer_handler)
