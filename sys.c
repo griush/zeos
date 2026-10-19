@@ -67,3 +67,8 @@ int sys_gettime(void)
 {
 	return zeos_ticks;
 }
+
+int sys_getpid(void)
+{
+	return current()->PID;
+}

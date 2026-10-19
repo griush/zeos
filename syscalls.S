@@ -39,3 +39,22 @@ ENTRY(gettime)
 gettime_end:
 	popl %ebp
 	ret
+
+ENTRY(getpid)
+	pushl %ebp
+	movl %esp, %ebp
+	pushl %ebx
+ 
+	leal 8(%ebp), %ebx
+	movl $20, %eax          /* sys_gettime */
+	int $0x93
+ 
+	popl %ebx
+	cmpl $0, %eax
+	jge getpid_end
+	negl %eax
+	movl %eax, errno
+	movl $-1, %eax
+getpid_end:
+	popl %ebp
+	ret

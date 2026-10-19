@@ -26,8 +26,11 @@ int __attribute__ ((__section__(".text.main")))
 {
 	/* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
 	/* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
+	char buf[9];
+	hex_to_str(getpid(), buf);
+	print(buf);
 
 	while(1) {
-		print("executing init\n");
+		// print("executing init\n");
 	}
 }
