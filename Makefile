@@ -33,7 +33,8 @@ SYSOBJ = \
 	devices.o \
 	utils.o \
 	list.o \
-	hardware.o
+	hardware.o \
+	kernel.o
 
 LIBZEOS = -L . -l zeos
 
@@ -63,6 +64,9 @@ bootsect.s: bootsect.S
 	$(CPP) $(ASMFLAGS) -traditional $< -o $@
 
 entry.s: entry.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
+	$(CPP) $(ASMFLAGS) -o $@ $<
+
+kernel.s: kernel.S $(INCLUDEDIR)/asm.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
 sys_call_table.s: sys_call_table.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h

@@ -6,7 +6,9 @@
 #ifndef __LIBC_H__
 #define __LIBC_H__
 
+#ifndef NULL /* already defined for system so this is for user only */
 #define NULL ( (void *) 0)
+#endif /* NULL */
 
 void itoa(int a, char *b);
 

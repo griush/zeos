@@ -8,9 +8,6 @@
 #include <types.h>
 #include <mm_address.h>
 
- 
-
-
 int init_frames( void );
 int alloc_frame( void );
 void free_frame( unsigned int frame );
@@ -32,7 +29,8 @@ void setGdt();
 
 void setTSS();
 
-void set_ss_pag(page_table_entry *PT, unsigned page,unsigned frame, int user);
+void set_ss_pag(page_table_entry *PT, unsigned page, unsigned frame, int user);
 void del_ss_pag(page_table_entry *PT, unsigned page);
 unsigned int get_frame(page_table_entry *PT, unsigned int page);
+
 #endif  /* __MM_H__ */

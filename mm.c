@@ -199,7 +199,6 @@ int alloc_frame( void )
     return -1;
 }
 
-
 /* free_frame - Mark as FREE_FRAME the frame  'frame'.*/
 void free_frame( unsigned int frame )
 {
@@ -208,7 +207,7 @@ void free_frame( unsigned int frame )
 }
 
 /* set_ss_pag - Associates logical page 'page' with physical page 'frame' and 'user' access enabled/disabled */
-void set_ss_pag(page_table_entry *PT, unsigned page,unsigned frame, int user)
+void set_ss_pag(page_table_entry *PT, unsigned page, unsigned frame, int user)
 {
 	PT[page].entry=0;
 	PT[page].bits.pbase_addr=frame;
