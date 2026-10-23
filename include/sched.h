@@ -13,9 +13,18 @@
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
+extern struct list_head readyqueue;
+struct task_struct *list_head_to_task_struct(struct list_head *l);
+
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
+  struct list_head list;
+
+  unsigned long *kernel_esp;
+
+  int quantum;
+  int pending_ticks;
 };
 
 union task_union {
