@@ -30,7 +30,16 @@ int __attribute__ ((__section__(".text.main")))
 	hex_to_str(getpid(), buf);
 	print(buf);
 
+	int pid = fork();
+	if (pid < 0) {
+		print("fork error\n");
+	}
+
 	while(1) {
-		// print("executing init\n");
+		if (pid == 0) {
+			print("executing child\n"); /* a child process, not a real one lol */
+		} else {
+			print("executing init\n");
+		}
 	}
 }

@@ -28,6 +28,7 @@ union task_union {
 	unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
 };
 
+extern struct list_head ready_queue;
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 

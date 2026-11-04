@@ -19,6 +19,7 @@ void perror(void);
 /* syscalls
  * defined in syscalls.S
  */
+int fork(void);
 int write (int fd, const char *buffer, int size);
 int gettime(void);
 int getpid(void);

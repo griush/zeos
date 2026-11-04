@@ -173,20 +173,23 @@ void timer_routine(void)
 	zeos_ticks++;
 }
 
-static int curr_task = 0;
-
-void keyboard_routine(void) {
+void keyboard_routine(void)
+{
 	unsigned char ch = inb(0x60);
 
-	if (ch & 0x80) {
+	if (ch & 0x80)                      /* ignore key release */
 		return;
-	}
 
-	if (curr_task == 0) {
-		curr_task = 1;
-		task_switch((union task_union *)idle_task);
-	} else {
-		curr_task = 0;
-		task_switch((union task_union *)init_task);
-	}
+	if (list_empty(&ready_queue))       /* nobody to switch to */
+		return;
+
+	/* take the first ready task */
+	struct list_head *e = list_first(&ready_queue);
+	list_del(e);
+	struct task_struct *next = list_entry(e, struct task_struct, list);
+
+	/* current goes to the back of the queue, so the two alternate */
+	list_add_tail(&current()->list, &ready_queue);
+
+	task_switch((union task_union *)next);
 }

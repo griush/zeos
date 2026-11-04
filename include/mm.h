@@ -16,6 +16,7 @@ void clear_page_table(page_table_entry* process_PT);
 void set_user_pages(page_table_entry* process_PT);
 void set_kernel_pages (page_table_entry* process_PT);
 
+void set_user_data_pages(page_table_entry* process_PT);
 
 extern Descriptor  *gdt;
 

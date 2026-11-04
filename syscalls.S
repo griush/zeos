@@ -2,6 +2,25 @@
 
 .globl errno
 
+ENTRY(fork)
+	pushl %ebp
+	movl %esp, %ebp
+	pushl %ebx
+ 
+	leal 8(%ebp), %ebx
+	movl $2, %eax          /* sys_fork */
+	int $0x93
+ 
+	popl %ebx
+	cmpl $0, %eax
+	jge fork_end
+	negl %eax
+	movl %eax, errno
+	movl $-1, %eax
+fork_end:
+	popl %ebp
+	ret
+
 ENTRY(write)
 	pushl %ebp
 	movl %esp, %ebp
@@ -46,7 +65,7 @@ ENTRY(getpid)
 	pushl %ebx
  
 	leal 8(%ebp), %ebx
-	movl $20, %eax          /* sys_gettime */
+	movl $20, %eax          /* sys_getpid */
 	int $0x93
  
 	popl %ebx

@@ -110,3 +110,7 @@ sys_fin:
 	movl %eax, 0x18(%esp)
 	RESTORE_ALL
 	iret
+
+ENTRY(ret_from_fork)
+      RESTORE_ALL
+      iret

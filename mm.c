@@ -50,28 +50,45 @@ void clear_page_table(page_table_entry* process_PT)
 /* Initialize pages for initial process (user pages) */
 void set_user_pages(page_table_entry* process_PT)
 {
- int pag; 
- int new_ph_pag;
+	int pag; 
+	int new_ph_pag;
 
-  /* CODE */
-  for (pag=0;pag<NUM_PAG_CODE;pag++){
-	new_ph_pag=alloc_frame();
-    process_PT[NUM_PAG_DATA+pag].entry = 0;
-    process_PT[NUM_PAG_DATA+pag].bits.pbase_addr = new_ph_pag;
-    process_PT[NUM_PAG_DATA+pag].bits.user = 1;
-    process_PT[NUM_PAG_DATA+pag].bits.present = 1;
-  }
+	/* CODE */
+	for (pag=0;pag<NUM_PAG_CODE;pag++){
+		new_ph_pag=alloc_frame();
+		process_PT[NUM_PAG_DATA+pag].entry = 0;
+		process_PT[NUM_PAG_DATA+pag].bits.pbase_addr = new_ph_pag;
+		process_PT[NUM_PAG_DATA+pag].bits.user = 1;
+		process_PT[NUM_PAG_DATA+pag].bits.present = 1;
+	}
   
-  /* DATA */ 
-  for (pag=0;pag<NUM_PAG_DATA;pag++){
-	new_ph_pag=alloc_frame();
-    process_PT[pag].entry = 0;
-    process_PT[pag].bits.pbase_addr = new_ph_pag;
-    process_PT[pag].bits.user = 1;
-    process_PT[pag].bits.rw = 1;
-    process_PT[pag].bits.present = 1;
-  }
-  show_PT_range(process_PT, 0, NUM_PAG_DATA+NUM_PAG_CODE, " Reserved for User memory\n");
+	/* DATA */ 
+	for (pag=0;pag<NUM_PAG_DATA;pag++){
+		new_ph_pag=alloc_frame();
+		process_PT[pag].entry = 0;
+		process_PT[pag].bits.pbase_addr = new_ph_pag;
+		process_PT[pag].bits.user = 1;
+		process_PT[pag].bits.rw = 1;
+		process_PT[pag].bits.present = 1;
+	}
+	show_PT_range(process_PT, 0, NUM_PAG_DATA+NUM_PAG_CODE, " Reserved for User memory\n");
+}
+
+void set_user_data_pages(page_table_entry* process_PT)
+{
+	int pag; 
+	int new_ph_pag;
+
+	/* DATA */ 
+	for (pag = 0; pag < NUM_PAG_DATA; pag++){
+		new_ph_pag=alloc_frame();
+		process_PT[pag].entry = 0;
+		process_PT[pag].bits.pbase_addr = new_ph_pag;
+		process_PT[pag].bits.user = 1;
+		process_PT[pag].bits.rw = 1;
+		process_PT[pag].bits.present = 1;
+	}
+	show_PT_range(process_PT, 0, NUM_PAG_DATA, " Reserved for User memory\n");
 }
 
 void set_kernel_pages (page_table_entry* process_PT)

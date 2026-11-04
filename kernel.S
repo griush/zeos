@@ -13,6 +13,7 @@ ENTRY(switch_stack)
 ENTRY(task_switch)
 	pushl %ebp
 	movl %esp, %ebp
+
 	pushl %esi
 	pushl %edi
 	pushl %ebx
@@ -22,5 +23,6 @@ ENTRY(task_switch)
 	popl %ebx
 	popl %edi
 	popl %esi
+
 	popl %ebp
 	ret
