@@ -2,6 +2,20 @@
 
 .globl errno
 
+ENTRY(exit)
+	pushl %ebp
+	movl %esp, %ebp
+	pushl %ebx
+ 
+	leal 8(%ebp), %ebx
+	movl $1, %eax          /* sys_exit */
+	int $0x93
+ 
+	/* does not return */
+	popl %ebx
+	popl %ebp
+	ret
+
 ENTRY(fork)
 	pushl %ebp
 	movl %esp, %ebp

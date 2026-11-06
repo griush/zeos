@@ -26,7 +26,48 @@ int sys_ni_syscall()
 	return -ENOSYS;
 }
 
+void sys_exit(void)
+{
+	struct task_struct *p = current();
+	unsigned int p_frame = (unsigned int)p >> 12;
+	
+	page_table_entry *pdir = get_DIR(p);
+	page_table_entry *sys_pt = get_PT(p);
+
+	unsigned int dir_frame = (unsigned int)pdir >> 12;
+	unsigned int usr_pt_frame = (unsigned int)pdir[1].bits.pbase_addr;
+
+	page_table_entry *usr_pt = (page_table_entry *)(usr_pt_frame << 12);
+
+	for (int i = 0; i < NUM_PAG_DATA; i++)
+	{
+		unsigned int f = get_frame(usr_pt, i);
+		free_frame(f);
+	}
+
+	/* this is commented, do NOT uncomment,
+	 * it leaks the process' task union but we need the stack
+	 * to return after invalidating the TLB
+	 * it's the OS resposability to fix the leak in another moment
+	 */
+	// del_ss_pag(sys_pt, p_frame);
+	del_ss_pag(sys_pt, dir_frame);
+	del_ss_pag(sys_pt, usr_pt_frame);
+	free_frame(p_frame);
+	free_frame(dir_frame);
+	free_frame(usr_pt_frame);
+
+	/* force scheduler */
+	sched_next_rr();
+}
+
+// PREGUNTAS FORK:
+// incremento PID?
+// errores
+
 static int next_pid = 2;
+
+/* in entry.S */
 extern void ret_from_fork(void);
 
 int sys_fork(void)

@@ -49,6 +49,7 @@ void init_sched(void);
 
 struct task_struct * current();
 
+void sched_next_rr(void);
 void schedule(void);
 
 int get_quantum(struct task_struct *t);

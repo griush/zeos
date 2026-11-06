@@ -155,8 +155,13 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
 
 void sched_next_rr(void)
 {
-	struct list_head *e = list_first(&ready_queue);
-	struct task_struct *next = list_entry(e, struct task_struct, list);
+	struct task_struct *next;
+	if (list_empty(&ready_queue)) {
+		next = idle_task;
+	} else {
+		struct list_head *e = list_first(&ready_queue);
+		next = list_entry(e, struct task_struct, list);
+	}
 
 	update_process_state_rr(next, NULL);
 	task_switch((union task_union *)next);
