@@ -160,6 +160,7 @@ void sched_next_rr(void)
 
 	update_process_state_rr(next, NULL);
 	task_switch((union task_union *)next);
+	global_quantum = 0;
 }
 
 void schedule (void)
