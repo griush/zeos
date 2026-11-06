@@ -131,7 +131,13 @@ typedef Word Selector;
 /**************************************************************************/
 #define INITIAL_EFLAGS 0x00000200
 
-#define NULL 0
+/* collides with libc.h which is for user code */
+#ifdef NULL
+	#undef NULL
+	#define NULL 0
+#else
+	#define NULL 0
+#endif
 
 typedef union 
 {

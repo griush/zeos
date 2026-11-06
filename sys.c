@@ -26,6 +26,124 @@ int sys_ni_syscall()
 	return -ENOSYS;
 }
 
+void sys_exit(void)
+{
+	struct task_struct *p = current();
+	unsigned int p_frame = (unsigned int)p >> 12;
+	
+	page_table_entry *pdir = get_DIR(p);
+	page_table_entry *sys_pt = get_PT(p);
+
+	unsigned int dir_frame = (unsigned int)pdir >> 12;
+	unsigned int usr_pt_frame = (unsigned int)pdir[1].bits.pbase_addr;
+
+	page_table_entry *usr_pt = (page_table_entry *)(usr_pt_frame << 12);
+
+	for (int i = 0; i < NUM_PAG_DATA; i++)
+	{
+		unsigned int f = get_frame(usr_pt, i);
+		free_frame(f);
+	}
+
+	/* this is commented, do NOT uncomment,
+	 * it leaks the process' task union but we need the stack
+	 * to return after invalidating the TLB
+	 * it's the OS resposability to fix the leak in another moment
+	 */
+	// del_ss_pag(sys_pt, p_frame);
+	del_ss_pag(sys_pt, dir_frame);
+	del_ss_pag(sys_pt, usr_pt_frame);
+	free_frame(p_frame);
+	free_frame(dir_frame);
+	free_frame(usr_pt_frame);
+
+	/* force scheduler */
+	sched_next_rr();
+}
+
+// PREGUNTAS FORK:
+// incremento PID?
+// errores
+
+static int next_pid = 2;
+
+/* in entry.S */
+extern void ret_from_fork(void);
+
+int sys_fork(void)
+{
+	struct task_struct *parent = current();
+	page_table_entry *parent_dir = get_DIR(parent);
+	page_table_entry *sys_pt = get_PT(parent);
+	unsigned int sys_pt_frame = parent_dir[0].bits.pbase_addr;
+	page_table_entry *parent_usr_pt =
+		(page_table_entry *)((unsigned int)parent_dir[1].bits.pbase_addr << 12);
+
+	/* 0 = task_union, 1 = dir, 2 = user PT, 3.. = data pages */
+	int frames[3 + NUM_PAG_DATA];
+	int i, n;
+
+	/* reserve everything, roll back on failure */
+	for (n = 0; n < 3 + NUM_PAG_DATA; n++) {
+		frames[n] = alloc_frame();
+		if (frames[n] == -1) {
+			while (--n >= 0) free_frame(frames[n]);
+			return -ENOMEM;
+		}
+	}
+
+	union task_union *child = (union task_union *)(frames[0] << 12);
+	page_table_entry *child_dir = (page_table_entry *)(frames[1] << 12);
+	page_table_entry *child_usr_pt = (page_table_entry *)(frames[2] << 12);
+
+	set_ss_pag(sys_pt, frames[0], frames[0], 0);
+	set_ss_pag(sys_pt, frames[1], frames[1], 0);
+	set_ss_pag(sys_pt, frames[2], frames[2], 0);
+
+	/* user page table */
+	clear_page_table(child_usr_pt);
+
+	/* code: shared with the parent */
+	for (i = 0; i < NUM_PAG_CODE; i++)
+		child_usr_pt[NUM_PAG_DATA + i].entry =
+			parent_usr_pt[NUM_PAG_DATA + i].entry;
+
+	/* data: private copy */
+	for (i = 0; i < NUM_PAG_DATA; i++) {
+		int f = frames[3 + i];
+		set_ss_pag(child_usr_pt, i, f, 1);
+
+		set_ss_pag(sys_pt, f, f, 0);
+		copy_data((void *)((PAG_LOG_INIT_DATA + i) << 12),
+		          (void *)(f << 12), PAGE_SIZE);
+		del_ss_pag(sys_pt, f);
+	}
+	set_cr3(parent_dir);                            /* flush TLB */
+
+	/* directory */
+	clear_page_table(child_dir);
+	set_ss_pag(child_dir, 0, sys_pt_frame, 0);
+	set_ss_pag(child_dir, 1, frames[2], 1);
+
+	/* setup PCB */
+	copy_data(parent, child, sizeof(union task_union));
+
+	child->task.PID = next_pid++;
+	child->task.quantum = parent->quantum;
+	child->task.state = ST_READY;
+	child->task.dir_pages_baseAddr = child_dir;
+
+	child->stack[KERNEL_STACK_SIZE - 10] = 0;                       /* eax = 0 */
+	child->stack[KERNEL_STACK_SIZE - 17] = (DWord)ret_from_fork;    /* ret addr */
+	child->stack[KERNEL_STACK_SIZE - 18] = 0;                       /* fake ebp */
+	child->task.kernel_esp = (DWord)&child->stack[KERNEL_STACK_SIZE - 18];
+
+	/* schedule it */
+	list_add_tail(&child->task.list, &ready_queue);
+
+	return child->task.PID;
+}
+
 struct write_params {
 	int fd;
 	char *buffer;
@@ -66,4 +184,9 @@ int sys_write(void *params)
 int sys_gettime(void)
 {
 	return zeos_ticks;
+}
+
+int sys_getpid(void)
+{
+	return current()->PID;
 }
