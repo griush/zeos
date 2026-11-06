@@ -15,7 +15,9 @@ enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
 struct task_struct {
 	int PID;			/* Process ID. This MUST be the first field of the struct. */
-	int remaining_quantum;
+	int remaining_quantum;          /* quantum that is left in the process */
+	int quantum;			/* the qtt in resets to/starts with */
+	enum state_t state;
 	page_table_entry * dir_pages_baseAddr;
 
 	DWord kernel_esp;
@@ -46,6 +48,11 @@ void init_idle(void);
 void init_sched(void);
 
 struct task_struct * current();
+
+void schedule(void);
+
+int get_quantum(struct task_struct *t);
+void set_quantum(struct task_struct *t, int new_quantum);
 
 /* defined in kernel.S */
 void task_switch(union task_union *new);

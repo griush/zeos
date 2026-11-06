@@ -88,6 +88,8 @@ int sys_fork(void)
 	copy_data(parent, child, sizeof(union task_union));
 
 	child->task.PID = next_pid++;
+	child->task.quantum = parent->quantum;
+	child->task.state = ST_READY;
 	child->task.dir_pages_baseAddr = child_dir;
 
 	child->stack[KERNEL_STACK_SIZE - 10] = 0;                       /* eax = 0 */

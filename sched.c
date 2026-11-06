@@ -16,6 +16,8 @@ struct list_head ready_queue;
 struct task_struct *init_task;
 struct task_struct *idle_task;
 
+int global_quantum = 0;
+
 void cpu_idle(void)
 {
 	__sti();
@@ -58,6 +60,7 @@ void init_idle(void)
 
 	// 6)
 	idle_p->task.PID = 0;
+	idle_p->task.quantum = 5;
 
 	// 7)
 	idle_task = &(idle_p->task);
@@ -94,6 +97,8 @@ void init_task1(void)
 
 	// 4)
 	init_p->task.PID = 1;
+	init_p->task.quantum = 10;
+	init_p->task.state = ST_RUN;
 
 	// 5)
 	tss.esp0 = KERNEL_ESP(init_p);
@@ -112,6 +117,68 @@ void init_task1(void)
 void init_sched()
 {
 	INIT_LIST_HEAD(&ready_queue);
+	global_quantum = 0;
+}
+
+void update_sched_data_rr(void)
+{
+	global_quantum += 1;
+}
+
+int needs_sched_rr(void)
+{
+	if (current()->PID == 0) /* idle process */
+	{
+		return !list_empty(&ready_queue);
+	}
+
+	return global_quantum > get_quantum(current()) && !list_empty(&ready_queue);
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
+{
+	if (dst_queue == NULL)
+	{
+		t->state = ST_RUN;
+
+		/* assume it was in ready_queue */
+		list_del(&t->list);
+		return;
+	}
+	if (dst_queue == &ready_queue)
+	{
+		t->state = ST_READY;
+		list_add_tail(&t->list, dst_queue);
+		return;
+	}
+}
+
+void sched_next_rr(void)
+{
+	struct list_head *e = list_first(&ready_queue);
+	struct task_struct *next = list_entry(e, struct task_struct, list);
+
+	update_process_state_rr(next, NULL);
+	task_switch((union task_union *)next);
+}
+
+void schedule (void)
+{
+	update_sched_data_rr();
+	if (needs_sched_rr()) {
+		update_process_state_rr(current(), &ready_queue);
+		sched_next_rr();
+	}
+}
+
+int get_quantum (struct task_struct *t)
+{
+	return t->quantum;
+}
+
+void set_quantum (struct task_struct *t, int new_quantum)
+{
+	t->quantum = new_quantum;
 }
 
 void switch_stack(DWord *save_sp, DWord new_sp);
