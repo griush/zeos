@@ -1,5 +1,32 @@
 #include <asm.h>
 
+/* Implementación en Ensamblador de task_switch (preserva registros callee-saved) */
+ENTRY(task_switch)
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %esi
+    pushl %edi
+    pushl %ebx
+    pushl 8(%ebp)            /* Pasa el argumento 'new' a inner_task_switch */
+    call inner_task_switch
+    addl $4, %esp
+    popl %ebx
+    popl %edi
+    popl %esi
+    popl %ebp
+    ret
+
+/* Devuelve el valor actual del registro %ebp */
+ENTRY(get_ebp)
+    movl %ebp, %eax
+    ret
+
+/* Asigna el nuevo %esp y restaura el marco */
+ENTRY(set_esp)
+    movl 4(%esp), %esp       /* Asigna %esp al valor asignado (new_esp) */
+    popl %ebp                /* Desapila el marco EBP del nuevo proceso */
+    ret                      /* Desapila la dirección de retorno y salta a ella */
+
 // Returns EFLAGS
 ENTRY(get_eflags)
     pushf

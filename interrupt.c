@@ -169,6 +169,7 @@ void pagefault_routine(struct sys_stack *ctx, unsigned int cr2) {
 void timer_routine(void) {
   zeos_show_clock();
   zeos_ticks++;
+  schedule(); /* Invocación al planificador */
 }
 
 void keyboard_routine(void) {

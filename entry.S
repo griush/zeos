@@ -110,3 +110,8 @@ sys_fin:
 	movl %eax, 0x18(%esp)
 	RESTORE_ALL
 	iret
+
+ENTRY(ret_from_fork)
+    call EOI                 /* Reactiva el controlador de interrupciones (PIC) */
+    RESTORE_ALL              /* Restaura registros (devuelve EAX = 0 en el hijo) */
+    iret                     /* Retorna a espacio de usuario (Ring 3) */
