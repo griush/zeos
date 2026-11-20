@@ -137,6 +137,9 @@ int needs_sched_rr(void)
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
 {
+	if (t->PID == 0)
+		return;
+
 	if (dst_queue == NULL)
 	{
 		t->state = ST_RUN;
@@ -213,4 +216,3 @@ page_table_entry * get_PT (struct task_struct *t)
 {
        return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
-

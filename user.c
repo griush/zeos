@@ -48,7 +48,7 @@ int __attribute__ ((__section__(".text.main")))
 				exit();
 			}
 		} else {
-			print("executing init\n");
+			// print("executing init\n");
 		}
 	}
 }

@@ -1,6 +1,7 @@
 /*
  * interrupt.c -
  */
+#include "include/buffer.h"
 #include <types.h>
 #include <interrupt.h>
 #include <segment.h>
@@ -30,6 +31,8 @@ char char_map[] =
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
 };
+
+struct buffer kbd_buffer;
 
 /*
  * handlers below defined in entry.S
@@ -95,7 +98,7 @@ void setIdt()
   /* Program interrups/exception service routines */
   idtR.base  = (DWord)idt;
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
-  
+
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
@@ -106,6 +109,8 @@ void setIdt()
 
   /* syscalls */
   setTrapHandler(0x93, system_call_handler, 3);
+
+  init_buffer(&kbd_buffer);
 
   set_idt_reg(&idtR);
 }
@@ -174,10 +179,26 @@ void timer_routine(void)
 	schedule();
 }
 
+#define BUFFER_DBG 0
+
 void keyboard_routine(void)
 {
 	unsigned char ch = inb(0x60);
 
 	if (ch & 0x80)                      /* ignore key release */
 		return;
+
+	unsigned char c = char_map[ch & 0x7f];
+	if (c != '\0') {
+		write_buffer(&kbd_buffer, c);
+#if BUFFER_DBG
+		if (buffer_full(&kbd_buffer)) {
+			printk("kbd buffer full\n");
+			for (int i = 0; i < BUFFER_LEN; i++) {
+				printc(kbd_buffer.ch[(kbd_buffer.read + i) % BUFFER_LEN]);
+			}
+			printc('\n');
+		}
+#endif
+	}
 }

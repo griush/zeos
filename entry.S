@@ -82,8 +82,9 @@ ENTRY(pagefault_handler)
 
 ENTRY(timer_handler)
       SAVE_ALL
-      EOI
       call timer_routine
+ENTRY(ret_from_fork)
+      EOI
       RESTORE_ALL
       iret
 
@@ -110,7 +111,3 @@ sys_fin:
 	movl %eax, 0x18(%esp)
 	RESTORE_ALL
 	iret
-
-ENTRY(ret_from_fork)
-      RESTORE_ALL
-      iret
