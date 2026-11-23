@@ -33,6 +33,7 @@ char char_map[] =
 };
 
 struct buffer kbd_buffer;
+struct list_head kbd_queue;
 
 /*
  * handlers below defined in entry.S
@@ -111,6 +112,7 @@ void setIdt()
   setTrapHandler(0x93, system_call_handler, 3);
 
   init_buffer(&kbd_buffer);
+  INIT_LIST_HEAD(&kbd_queue);
 
   set_idt_reg(&idtR);
 }
@@ -191,6 +193,19 @@ void keyboard_routine(void)
 	unsigned char c = char_map[ch & 0x7f];
 	if (c != '\0') {
 		write_buffer(&kbd_buffer, c);
+
+		if (!list_empty(&kbd_queue)) {
+			struct list_head *first_node = list_first(&kbd_queue);
+			struct task_struct *first_task = list_entry(first_node, struct task_struct, list);
+			
+			first_task->pending_chars--;
+			if (first_task->pending_chars == 0 || buffer_full(&kbd_buffer)) {
+				list_del(first_node);
+				first_task->state = ST_READY;
+				list_add_tail(&first_node, &ready_queue);
+			}
+		}
+		
 #if BUFFER_DBG
 		if (buffer_full(&kbd_buffer)) {
 			printk("kbd buffer full\n");

@@ -23,6 +23,8 @@ struct task_struct {
 	DWord kernel_esp;
 
 	struct list_head list;
+
+	int pending_chars;	/* Cantidad de caracteres pendientes de copiar al buffer de usuario */
 };
 
 union task_union {

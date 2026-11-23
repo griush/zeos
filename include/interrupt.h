@@ -12,6 +12,9 @@
 extern Gate idt[IDT_ENTRIES];
 extern Register idtR;
 
+extern struct buffer kbd_buffer;
+extern struct list_head kbd_queue;
+
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL);
 void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL);
 

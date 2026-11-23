@@ -8,6 +8,7 @@
 #include <mm_address.h>
 #include <sched.h>
 #include <errno.h>
+#include <interrupt.h>
 
 #define LECTURA 0
 #define ESCRIPTURA 1
@@ -131,6 +132,7 @@ int sys_fork(void)
 	child->task.PID = next_pid++;
 	child->task.quantum = parent->quantum;
 	child->task.state = ST_READY;
+	child->task.pending_chars = 0;
 	child->task.dir_pages_baseAddr = child_dir;
 
 	child->stack[KERNEL_STACK_SIZE - 10] = 0;                       /* eax = 0 */
@@ -177,6 +179,64 @@ int sys_write(void *params)
 		copy_from_user(p.buffer + done, s_buff, n);
 		sys_write_console(s_buff, n);
 		done += n;
+	}
+	return done;
+}
+
+struct read_params {
+	char *b;
+	int maxchars;
+};
+
+int sys_read(void *params)
+{
+	struct read_params p;
+	int done = 0;
+
+	if (!access_ok(VERIFY_READ, params, sizeof(p)))
+		return -EFAULT;
+	copy_from_user(params, &p, sizeof(p));
+
+	if (p.b == NULL)
+		return -EFAULT; /* bad buffer */
+	if (p.maxchars < 0)
+		return -EINVAL; /* bad read size */
+	if (!access_ok(VERIFY_WRITE, p.b, p.maxchars))
+		return -EFAULT;
+	if (p.maxchars == 0)
+		return 0;
+
+	int done = 0;
+	int in_queue = 0;
+	char kbuf[BUFFER_LEN];
+
+	while (done < p.maxchars) {
+		/* Solo consumimos del buffer si nadie esperaba antes que nosotros,
+		 * o si somo el proceso que acaba de despertar de la cabeza de la cola*/
+		if (list_empty(&kbd_queue) || in_queue) {
+			int n = 0;
+			while (!buffer_empty(&kbd_buffer) && (done < n) < p.maxchars && n < BUFFER_LEN) {
+				kbuf[n++] = read_buffer(&kbd_buffer);
+				
+			}
+			if (n > 0) {
+				copy_to_user(kbuf, p.b + done, n);
+				done += n;
+			}
+			if (done >= p.maxchars)
+				break;
+		}
+		/* Faltan caracteres: bloquear proceso respetando orden FIFO */
+		current()->pending_chars = p.maxchars - done;
+		current()->state = ST_BLOCKED;
+		if (in_queue) {
+			/* Si despertamos antes de tiempo por llenado de kdb_buffer, mantenemos prioridad*/
+			list_add(&current()->list, &kbd_queue);
+		} else {
+			list_add_tail(&current()->list, &kbd_queue);
+			in_queue = 1;
+		}
+		sched_next_rr();
 	}
 	return done;
 }

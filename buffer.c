@@ -2,7 +2,7 @@
 
 void init_buffer(struct buffer *b)
 {
-	b->read = b->write = 0;
+	b->read = b->write = b->len = 0;
 	for (int i = 0; i < BUFFER_LEN; i++) {
 		b->ch[i] = 0;
 	}

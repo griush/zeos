@@ -35,6 +35,25 @@ fork_end:
 	popl %ebp
 	ret
 
+ENTRY(read)
+	pushl %ebp
+	movl %esp, %ebp
+	pushl %ebx
+ 
+	leal 8(%ebp), %ebx
+	movl $3, %eax           /* sys_read */
+	int $0x93
+ 
+	popl %ebx
+	cmpl $0, %eax
+	jge read_end
+	negl %eax
+	movl %eax, errno
+	movl $-1, %eax
+read_end:
+	popl %ebp
+	ret
+
 ENTRY(write)
 	pushl %ebp
 	movl %esp, %ebp

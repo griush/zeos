@@ -61,6 +61,7 @@ void init_idle(void)
 	// 6)
 	idle_p->task.PID = 0;
 	idle_p->task.quantum = 5;
+	idle_p->task.pending_chars = 0;
 
 	// 7)
 	idle_task = &(idle_p->task);
@@ -99,7 +100,7 @@ void init_task1(void)
 	init_p->task.PID = 1;
 	init_p->task.quantum = 10;
 	init_p->task.state = ST_RUN;
-
+	init_p->task.pending_chars = 0;
 	// 5)
 	tss.esp0 = KERNEL_ESP(init_p);
 

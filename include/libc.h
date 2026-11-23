@@ -21,6 +21,7 @@ void perror(void);
  */
 void exit(void);
 int  fork(void);
+int  read(char *b, int maxchars);
 int  write (int fd, const char *buffer, int size);
 int  gettime(void);
 int  getpid(void);
