@@ -1,9 +1,7 @@
 #include <libc.h>
 
 char buff[24];
-
 int pid;
-
 int result;
 
 void hex_to_str(unsigned int val, char *buf)
@@ -24,31 +22,62 @@ int print(const char *msg) {
 int __attribute__ ((__section__(".text.main")))
   main(void)
 {
-	/* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
-	/* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 	char buf[9];
+	print("\n=== TEST READ DE ZEOS ===\nPID actual: ");
 	hex_to_str(getpid(), buf);
 	print(buf);
+	print("\n");
 
-	int counter = 0;
+	/* -------------------------------------------------------------
+	 * PRUEBA 1: Lectura síncrona bloqueante (5 teclas)
+	 * ------------------------------------------------------------- */
+	print("\n[PRUEBA 1] Escribe 5 caracteres por teclado para continuar:\n");
+	
+	char read_buf[32];
+	int bytes_leidos = read(read_buf, 5);
 
+	if (bytes_leidos > 0) {
+		print("¡Desbloqueado! Has escrito: ");
+		write(1, read_buf, bytes_leidos);
+		print("\n");
+	} else {
+		print("Error en sys_read\n");
+	}
+
+	/* -------------------------------------------------------------
+	 * PRUEBA 2: Concurrencia de lectura con fork() (Orden FIFO)
+	 * ------------------------------------------------------------- */
+	print("\n[PRUEBA 2] Ejecutando fork()...\n");
+	
 	int pid = fork();
 	if (pid < 0) {
-		print("fork error\n");
+		print("Error al ejecutar fork()\n");
+	}
+
+	if (pid == 0) {
+		/* --- PROCESO HIJO --- */
+		print("[HIJO] Esperando 3 teclas...\n");
+		char child_buf[10];
+		int ret_hijo = read(child_buf, 3);
+		if (ret_hijo > 0) {
+			print("[HIJO] Leido con exito: ");
+			write(1, child_buf, ret_hijo);
+			print("\n[HIJO] Finalizando...\n");
+		}
+		exit();
+	} else {
+		/* --- PROCESO PADRE --- */
+		print("[PADRE] Esperando 3 teclas...\n");
+		char parent_buf[10];
+		int ret_padre = read(parent_buf, 3);
+		if (ret_padre > 0) {
+			print("[PADRE] Leido con exito: ");
+			write(1, parent_buf, ret_padre);
+			print("\n[PADRE] Finalizando...\n");
+		}
 	}
 
 	while(1) {
-		if (pid == 0) {
-			print("executing child\n"); /* a child process, not a real one lol */
-
-			counter += 1;
-			if (counter > 500)
-			{
-				print("executing child for real\n");
-				exit();
-			}
-		} else {
-			// print("executing init\n");
-		}
+		/* Bucle infinito final */
 	}
 }
